@@ -1,11 +1,13 @@
 from googleapiclient.discovery import build
 from Modual import goolge_interaction
 from Modual import Password_creator_modual
+from Modual import webserver_modual
 
 
 def main():
     # calling_update()
     generate_password()
+    webserver_modual.run_web_server()
 
 
 def calling_update():
