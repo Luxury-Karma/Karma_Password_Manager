@@ -14,6 +14,7 @@ def calling_update():
     all_files: dict = goolge_interaction.get_files_and_id(service)
     goolge_interaction.update_backup(all_files, service)
 
+
 def generate_password():
     print(Password_creator_modual.generate_password(["D:\\projet\\apps\\test_comon_password.txt",
                                                      "D:\\projet\\apps\\test_comon_password_three.txt",

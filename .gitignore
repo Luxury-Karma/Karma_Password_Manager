@@ -1,7 +1,5 @@
-
-
-# Created by https://www.toptal.com/developers/gitignore/api/pycharm,windows,linux,macos,python
-# Edit at https://www.toptal.com/developers/gitignore?templates=pycharm,windows,linux,macos,python
+# Created by https://www.toptal.com/developers/gitignore/api/windows,pycharm,linux,macos,python
+# Edit at https://www.toptal.com/developers/gitignore?templates=windows,pycharm,linux,macos,python
 
 ### Linux ###
 *~
@@ -362,8 +360,10 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/pycharm,windows,linux,macos,python
+# End of https://www.toptal.com/developers/gitignore/api/windows,pycharm,linux,macos,python
 
 
 
 token.json
+password_test.json
+/.idea/
