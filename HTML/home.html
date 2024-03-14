@@ -6,5 +6,33 @@
 </head>
 <body>
 
+ <form action="/action_page.php">
+     <!-- Select Tag-->
+     <label for="website">Choose website to update</label>
+     <select name="website" id="website">
+         <option value="Google">Google</option>
+         <option value="Facebook">Facebook</option>
+         <option value="Twitter">Twitter</option>
+         <option value="Chat">Chat</option>
+     </select><br><br>
+
+     <!-- User Input Zone -->
+     <label for="new_web_site">New Website:</label>
+     <input type="text" id="new_web_site" name="new_website"><br><br>
+     <label for="new_password">Password:</label>
+     <input type="text" id="new_password" name="new_password"><br><br>
+
+
+     <!-- Radio Button -->
+     <input type="radio" id="new_web" name="chosen_option" value="new_web" checked>
+     <label for="new_web">New Web site</label><br>
+     <input type="radio" id="update_web" name="chosen_option" value="update_web">
+     <label for="update_web">Update Website</label><br>
+     <input type="radio" id="remove_web" name="chosen_option" value="remove_web">
+     <label for="remove_web">Remove Website</label>
+     <!-- END -->
+</form>
+
+
 </body>
 </html>
