@@ -23,5 +23,9 @@ def generate_password():
                                                      "D:\\projet\\apps\\test_comon_password_two.txt"]))
 
 
+def get_db_path() -> str:
+    return '/db.json'
+
+
 if __name__ == "__main__":
     main()

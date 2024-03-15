@@ -9,12 +9,12 @@
  <form action="/action_page.php">
      <!-- Select Tag-->
      <label for="website">Choose website to update</label>
-     <select name="website" id="website">
-         <option value="Google">Google</option>
-         <option value="Facebook">Facebook</option>
-         <option value="Twitter">Twitter</option>
-         <option value="Chat">Chat</option>
-     </select><br><br>
+    <select name="website" id="website">
+        {% for option in website_options %}
+        <option value="{{ option }}">{{ option }}</option>
+        {% endfor %}
+    </select><br><br>
+
 
      <!-- User Input Zone -->
      <label for="new_web_site">New Website:</label>
@@ -29,8 +29,14 @@
      <input type="radio" id="update_web" name="chosen_option" value="update_web">
      <label for="update_web">Update Website</label><br>
      <input type="radio" id="remove_web" name="chosen_option" value="remove_web">
-     <label for="remove_web">Remove Website</label>
+     <label for="remove_web">Remove Website</label><br><br>
      <!-- END -->
+
+     <!--SUBMIT-->
+     <button type="button">Submit</button>
+
+
+
 </form>
 
 
