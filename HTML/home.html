@@ -3,42 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <title>Karma's Little Password manager Home Page</title>
+
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+
 </head>
 <body>
 
- <form action="/action_page.php">
-     <!-- Select Tag-->
-     <label for="website">Choose website to get/update Password</label>
+<form action="/submit" method="POST">
+    <!-- Select Tag-->
+    <label for="website">Choose website to get/update Password</label>
     <select name="website" id="website">
         {% for option in website_options %}
         <option value="{{ option }}">{{ option }}</option>
         {% endfor %}
     </select>
-     <button type="button">Get Password</button><br><br>
+    <button type="submit" name="action" value="get_password">Get Password</button><br><br>
+
+    <!-- User Input Zone -->
+    <label for="new_web_site">New Website:</label>
+    <input type="text" id="new_web_site" name="new_website"><br><br>
+    <label for="new_password">Password:</label>
+    <input type="text" id="new_password" name="new_password"><br><br>
+
+    <!-- Radio Button -->
+    <input type="radio" id="new_web" name="chosen_option" value="new_web" checked>
+    <label for="new_web">New Web site</label><br>
+    <input type="radio" id="update_web" name="chosen_option" value="update_web">
+    <label for="update_web">Update Website</label><br>
+    <input type="radio" id="remove_web" name="chosen_option" value="remove_web">
+    <label for="remove_web">Remove Website</label><br><br>
+    <!-- END -->
+
+    <!--SUBMIT-->
+    <button type="submit" name="action" value="submit">Submit</button>
 
 
-     <!-- User Input Zone -->
-     <label for="new_web_site">New Website:</label>
-     <input type="text" id="new_web_site" name="new_website"><br><br>
-     <label for="new_password">Password:</label>
-     <input type="text" id="new_password" name="new_password"><br><br>
-
-
-     <!-- Radio Button -->
-     <input type="radio" id="new_web" name="chosen_option" value="new_web" checked>
-     <label for="new_web">New Web site</label><br>
-     <input type="radio" id="update_web" name="chosen_option" value="update_web">
-     <label for="update_web">Update Website</label><br>
-     <input type="radio" id="remove_web" name="chosen_option" value="remove_web">
-     <label for="remove_web">Remove Website</label><br><br>
-     <!-- END -->
-
-     <!--SUBMIT-->
-     <button type="button">Submit</button>
-
-
+    <!-- password table -->
+    <table>
+        <tr>
+            <th>Website</th>
+            <th>Password</th>
+            <th>Notes</th>
+        </tr>
+        <tr>
+            <td>{{ website }}</td>
+            <td>{{ password }}</td>
+            <td>{{ note }}</td>
+        </tr>
+    </table>
 
 </form>
+
 
 
 </body>
