@@ -8,12 +8,13 @@
 
  <form action="/action_page.php">
      <!-- Select Tag-->
-     <label for="website">Choose website to update</label>
+     <label for="website">Choose website to get/update Password</label>
     <select name="website" id="website">
         {% for option in website_options %}
         <option value="{{ option }}">{{ option }}</option>
         {% endfor %}
-    </select><br><br>
+    </select>
+     <button type="button">Get Password</button><br><br>
 
 
      <!-- User Input Zone -->

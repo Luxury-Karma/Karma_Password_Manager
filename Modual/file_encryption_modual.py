@@ -36,7 +36,7 @@ def encrypt_file(password, filename, user_name) -> bool:
         salt=salt,
         iterations=100000,
     )
-    key = base64.urlsafe_b64encode(kdf.derive(password))
+    key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
 
     # Create a cipher object
     cipher_suite = Fernet(key)
@@ -54,7 +54,7 @@ def encrypt_file(password, filename, user_name) -> bool:
 
     # Save the encrypted data to a file
     try:
-        with open('encrypted_data.txt', 'wb') as f:
+        with open(filename, 'wb') as f:
             f.write(cipher_text)
     except IOError:
         print("Error writing encrypted data to file.")
@@ -80,7 +80,7 @@ def decrypt_file(password, file_to_decrypt_path, user_name) -> bool:
         salt=salt,
         iterations=100000,
     )
-    key = base64.urlsafe_b64encode(kdf.derive(password))
+    key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
 
     # Create a cipher object
     cipher_suite = Fernet(key)

@@ -4,8 +4,7 @@ app = Flask(__name__, template_folder='../HTML')
 
 
 def get_website_options():
-    # For demonstration purposes, I'm returning a static list here
-    return ["Google", "Facebook", "Twitter", "Chat"]
+    return Password_Management.get_all_website(usr_password='test',usr_name='test', db_path="db_test.json")
 
 
 @app.route('/')

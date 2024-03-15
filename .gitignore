@@ -367,3 +367,5 @@ $RECYCLE.BIN/
 token.json
 password_test.json
 /.idea/
+salt_test.txt
+db_test.json
