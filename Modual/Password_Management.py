@@ -1,5 +1,91 @@
 from Modual import file_encryption_modual
+from Modual import Password_creator_modual
+import main
 import json
+
+
+def generate_password() -> str:
+    return Password_creator_modual.generate_password(main.get_password_dictionary_path())
+
+
+def open_json_file(json_path: str):
+    json_information: dict = {}
+    with open(json_path, 'r') as db:
+        try:
+            json_information = json.load(db)
+        except json.JSONDecodeError as e:
+            print(f"There is no Database loadable.\n ERROR :{e}")
+        db.close()
+    return json_information
+
+
+def add_website(db_path: str, usr_name: str, usr_password: str, website_name: str, password: str,
+                more_information: str):
+    """
+    Add a website with its password to the data base
+    :param db_path: path to the user data base
+    :param usr_name: name of the user
+    :param usr_password: password of the user
+    :param website_name: name of the new website
+    :param password: password for the website
+    :param more_information: any more information to let for the website
+    :return: None
+    :rtype: None
+    """
+    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path, user_name=usr_name, password=usr_password):
+        print("File was not able to be decripted.")
+        return
+
+    Password_creator_modual.add_password_to_db(password=password, more_information=more_information,
+                                               website=website_name,
+                                               data_base_path=db_path)
+
+    if not file_encryption_modual.encrypt_file(password=usr_password, filename=db_path, user_name=usr_name):
+        print("MAJOR ERROR WAS NOT ABLE TO ENCRYPT THE FILE")
+
+
+def update_website(db_path: str, usr_name: str, usr_password: str, website_name: str, new_password: str,
+                   new_more_information: str):
+    """
+    Change the information for the website given
+    :param db_path: Path to the data base
+    :param usr_name: name of the data base user
+    :param usr_password: password of the data base user
+    :param website_name: name of the website to update
+    :param new_password: new password to the website
+    :param new_more_information: new information to the website
+    :return: None
+    :rtype: None
+    """
+    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path, password=usr_password, user_name=usr_name):
+        print("ERROR the file was not able to be decrypted")
+    db: dict = open_json_file(db_path)
+    website_information: dict = db[website_name]
+    if new_password == '' or new_password == None:
+        new_password = website_information['password']
+        print('No Need to change the password!')
+    if new_more_information == '' or new_more_information == None:
+        new_more_information = website_information['note']
+        print('No need to change the more information!')
+    website_information['note'] = new_more_information
+    website_information['password'] = new_password
+    db[website_name] = website_information
+    with open(db_path, 'w') as db_f:
+        json.dump(db, db_f)
+
+    if not file_encryption_modual.encrypt_file(password=usr_password, user_name=usr_name, filename=db_path):
+        print("MAJOR ERROR WAS NOT ABLE TO ENCRYPT THE FILE")
+
+
+def remove_website(db_path: str, usr_name: str, usr_password: str, website_name: str):
+    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path,user_name=usr_name,password=usr_password):
+        print("ERROR, could not decrypt file")
+    usr_db = open_json_file(db_path)
+    usr_db.pop(website_name, None)
+    with open(db_path, 'w') as db_f:
+        json.dump(usr_db, db_f)
+    if not file_encryption_modual.encrypt_file(password=usr_password,user_name=usr_name,filename=db_path):
+        print("MAJOR ERROR, could not encrypt file")
 
 
 def get_all_website(db_path: str, usr_name: str, usr_password: str) -> list[str]:
@@ -13,14 +99,9 @@ def get_all_website(db_path: str, usr_name: str, usr_password: str) -> list[str]
     """
     all_website: list[str] = []
     db_info: dict = {}
-    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path,user_name=usr_name,password=usr_password):
+    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path, user_name=usr_name, password=usr_password):
         print("ERROR")
-    with open(db_path, 'r') as db:
-        try:
-            db_info = json.load(db)
-        except json.JSONDecodeError as e:
-            print(f"There is no Database loadable.\n ERROR :{e}")
-        db.close()
+    db_info.update(open_json_file(db_path))
     if not file_encryption_modual.encrypt_file(usr_password, db_path, usr_name):
         print("MAJOR ERROR NOT ABLE TO ENCRYPT THE FILE.")
     for key, value in db_info.items():
@@ -39,20 +120,15 @@ def get_password_for_website(db_path: str, usr_name: str, usr_password: str, ask
     :rtype: dict
     """
     password_asked: dict = {}
-    db_information: dict = {}
+    db_info: dict = {}
 
     if not file_encryption_modual.decrypt_file(password=usr_password, user_name=usr_name, file_to_decrypt_path=db_path):
         print("ERROR NOT ABLE TO DECRYPT")
-    with open(db_path, 'r') as db:
-        try:
-            db_information = json.load(db)
-        except json.JSONDecodeError as e:
-            print(f"There is no Database loadable.\n ERROR :{e}")
-        db.close()
+    db_info.update(open_json_file(db_path))
     if not file_encryption_modual.encrypt_file(usr_password, db_path, usr_name):
         print("MAJOR ERROR NOT ABLE TO ENCRYPT THE FILE.")
 
-    for key, value in db_information.items():
+    for key, value in db_info.items():
         if key not in ask_website:
             continue
         password_asked[key] = value
