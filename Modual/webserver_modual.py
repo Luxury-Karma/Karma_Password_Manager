@@ -1,5 +1,15 @@
 from flask import Flask, request, render_template, redirect
 from Modual import Password_Management
+import os
+import pathlib
+import requests
+from flask import Flask, session, abort, redirect, request
+from google.oauth2 import id_token
+from google_auth_oauthlib.flow import Flow
+from pip._vendor import cachecontrol
+import google.auth.transport.requests
+from authlib.integrations.flask_client import OAuth
+
 
 app = Flask(__name__, template_folder='../HTML')
 
@@ -7,10 +17,33 @@ app = Flask(__name__, template_folder='../HTML')
 temp_user_name: str = 'test'
 temp_user_password: str = 'test'
 temp_db_path: str = 'db_test.json'
-
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id='your_client_id',  # USE YOUR TOKEN DO NOT HARD CODE IT DUMB ASS
+    client_secret='your_client_secret',  # USE YOUR TOKEN DO NOT HARD CODE IT DUMB ASS
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_params=None,
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    authorize_params=None,
+    api_base_url='https://www.googleapis.com/oauth2/v1/',
+    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',  # This is only needed if using openId to fetch user info
+    client_kwargs={'scope': 'openid email profile'},
+)
 
 # endregion
 
+
+#region Google Connection
+
+def google_authenticator():
+    pass
+
+
+#endregion
+
+
+#region User Web Page
 def get_website_options():
     return Password_Management.get_all_website(usr_password=temp_user_password, usr_name=temp_user_name,
                                                db_path=temp_db_path)
@@ -79,3 +112,5 @@ def submit():
 
 def run_web_server():
     app.run()
+#endregion
+
