@@ -1,15 +1,18 @@
+import secrets
+
 from Modual import Password_Management
 import json
 import requests
 from oauthlib import oauth2
-from flask import Flask, request, render_template, redirect
-
+from flask import Flask, request, render_template, redirect, session, url_for
 
 # region TEMPORARY USER KEEP
 temp_user_name: str = 'test'
 temp_user_password: str = 'test'
 DB_FILE_PATH: str = './usr_data/'
 # endregion
+
+
 
 read_client = Password_Management.open_json_file("D:\\projet\\api_files\\secret_token_webapp.json")
 CLIENT_ID = read_client['installed']['client_id']   # IN ABSOLUTLY NO CASE PUT THE REAL ONE IN GIT
@@ -83,7 +86,6 @@ def login():
     # redirect to the newly created Sign-In URI
     return redirect(REQ_URI)
 
-
 @app.route('/home')
 def home():
     "Redirect after Google login & consent"
@@ -109,7 +111,7 @@ def home():
     # Parse the token response
     CLIENT.parse_request_body_response(json.dumps(token_response.json()))
 
-    # Add token to the  Google endpoint to get the user info
+    # Add token to the Google endpoint to get the user info
     # oauthlib uses the token parsed in the previous step
     uri, headers, body = CLIENT.add_token(URL_DICT['get_user_info'])
 
@@ -117,12 +119,21 @@ def home():
     response_user_info = requests.get(uri, headers=headers, data=body)
     info = response_user_info.json()
 
+    # Store user's email in the session
+    session['email'] = info['email']
+
     return redirect('/user/%s' % info['email'])
+
 
 
 @app.route('/user/<email>')
 def login_success(email):
     """Landing page after successful login"""
+
+    # Check if the user is authenticated
+    if 'email' not in session or session['email'] != email:
+        # If not authenticated, redirect to the login page
+        return redirect(url_for('login'))
 
     return render_template(template_name_or_list='home.html', name='Home Page',
                            website_options=get_website_options(email),email=email)
@@ -131,7 +142,11 @@ def login_success(email):
 
 @app.route('/user/<email>/submit', methods=['POST'])
 def submit(email):
-    print(f'email detected : {email}')
+    # Check if the user is authenticated
+    if 'email' not in session or session['email'] != email:
+        # If not authenticated, redirect to the login page
+        print('WHO THE FUCK ARE YOU')
+        return redirect(url_for('login'))
     action = request.form.get('action')
     if action == 'get_password':
         if action == 'get_password':
@@ -143,7 +158,7 @@ def submit(email):
 
             return render_template('home.html', name='Home Page', website_options=get_website_options(usr_name=email),
                                    website=website, password=password_dictionary[f"{website}"]["password"],
-                                   note=password_dictionary[f"{website}"]["note"])
+                                   note=password_dictionary[f"{website}"]["note"],email=email)
     elif action == 'submit':
         print('action chosen : submit')
         chosen_option = request.form.get('chosen_option')
@@ -168,6 +183,8 @@ def submit(email):
 #region User Web Page
 
 def run_web_server():
+    # Set a secret key for the Flask application
+    app.secret_key = secrets.token_hex(16)  # Generate a random 16-byte secret key
     app.run(debug=True, host='0.0.0.0', port=5000, ssl_context='adhoc')
 #endregion
 
