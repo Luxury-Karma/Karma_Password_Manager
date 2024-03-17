@@ -15,6 +15,10 @@
             padding: 8px;
             text-align: left;
         }
+
+        .copy-button {
+            margin-left: 10px;
+        }
     </style>
 
 </head>
@@ -53,20 +57,42 @@
     <!--SUBMIT-->
     <button type="submit" name="action" value="submit">Submit</button>
 
-
     <!-- password table -->
     <table>
         <tr>
             <th>Website</th>
             <th>Password</th>
             <th>Notes</th>
+            <th>Action</th> <!-- Added new column for action button -->
         </tr>
         <tr>
             <td>{{ website }}</td>
             <td>{{ password }}</td>
             <td>{{ note }}</td>
+            <!-- Added button to copy password -->
+            <td><button type="button" class="copy-button" onclick="copyPassword('{{ password }}')">Copy Password</button></td>
         </tr>
     </table>
+
+    <!-- Script to copy password -->
+    <script>
+        function copyPassword(password) {
+            // Create a temporary textarea element to hold the password text
+            var tempTextarea = document.createElement("textarea");
+            tempTextarea.value = password;
+
+            // Append the textarea to the body and select its content
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+
+            // Copy the selected text to the clipboard
+            document.execCommand("copy");
+
+            // Remove the temporary textarea
+            document.body.removeChild(tempTextarea);
+
+        }
+    </script>
 
 </form>
 
