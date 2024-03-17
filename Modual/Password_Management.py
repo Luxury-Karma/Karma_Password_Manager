@@ -1,3 +1,5 @@
+import os
+
 from Modual import file_encryption_modual
 from Modual import Password_creator_modual
 import main
@@ -8,7 +10,7 @@ def generate_password() -> str:
     return Password_creator_modual.generate_password(main.get_password_dictionary_path())
 
 
-def open_json_file(json_path: str):
+def open_json_file(json_path: str) -> dict:
     json_information: dict = {}
     with open(json_path, 'r') as db:
         try:
@@ -119,6 +121,7 @@ def get_password_for_website(db_path: str, usr_name: str, usr_password: str, ask
     :return: list of all the password asked
     :rtype: dict
     """
+    print(f"DB PATH IS : {db_path}")
     password_asked: dict = {}
     db_info: dict = {}
 
@@ -134,3 +137,18 @@ def get_password_for_website(db_path: str, usr_name: str, usr_password: str, ask
         password_asked[key] = value
 
     return password_asked
+
+
+def look_user_files(usr_name: str, usr_password: str, db_file_path: str):
+    db_usr_path:str = f'{db_file_path}db_{usr_name}.json'
+    db_usr_path_abs: str = os.path.abspath(db_usr_path)
+    print(f"file location should be : {db_usr_path_abs}\n PATH RECEIVED: {db_usr_path}\nActive Directory {os.getcwd()}")
+    if os.path.exists(db_usr_path_abs):
+        print('User data exist ! yay')
+        return
+    random_dictionary = {'Whait this is empty!':{'password':'yes','note':'\'cause your dumb'}}
+    with open(db_usr_path_abs, 'w') as db:
+        json.dump(random_dictionary, db)
+        db.close()
+    file_encryption_modual.encrypt_file(password=usr_password, user_name=usr_name, filename=db_usr_path_abs)
+    print(f'new database created for user {usr_name}')

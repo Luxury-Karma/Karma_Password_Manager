@@ -9,33 +9,36 @@ from googleapiclient.http import MediaFileUpload
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
-
+CLIENT_SCOPES = ['openid', "https://www.googleapis.com/auth/userinfo.profile",
+                 'https://www.googleapis.com/auth/userinfo.email']
 SERVER_BACK_UP_DIRECTORY_NAME: str = "ServerBackUp"
 SERVER_BACK_FILE_NAME: str = "file.txt"
 
 
-def google_token_start():
-    """Shows basic usage of the Drive v3 API.
-  Prints the names and ids of the first 10 files the user has access to.
-  """
+def google_token_start(client_type):
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists("../token.json"):
-        creds = Credentials.from_authorized_user_file("../token.json", SCOPES)
+    token_file = f"../token_{client_type}.json"
+    secret_file = f"D:\\projet\\api_files\\secret_token_{client_type}.json"
+    temp_scopes: list[str] = SCOPES if client_type == 'desktop' else CLIENT_SCOPES
+
+    # Check if token file exists for the client type
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file, temp_scopes)
+
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                "D:\\projet\\api_files\\secret_token.json", SCOPES
-            )
+            flow = InstalledAppFlow.from_client_secrets_file(secret_file, temp_scopes)
             creds = flow.run_local_server(port=0)
+
         # Save the credentials for the next run
-        with open("../token.json", "w") as token:
+        with open(token_file, "w") as token:
             token.write(creds.to_json())
+
+    return creds
+
 
 
 def get_token_connection() -> Credentials:
@@ -107,4 +110,3 @@ def update_backup(list_directory:dict, service: build) -> None:
     media = MediaFileUpload("D:\\projet\\apps\\test.txt", mimetype='text/plain')
     service.files().update(fileId=file_id, media_body=media).execute()
     print("File updated!")
-

@@ -369,3 +369,4 @@ password_test.json
 /.idea/
 salt_test.txt
 db_test.json
+/usr_data/*
