@@ -44,10 +44,11 @@ app = Flask(__name__, template_folder='../HTML')
 
 
 #region SCRIPT
-def get_website_options(usr_name:str):
+def get_website_options(usr_name: str):
     Password_Management.look_user_files(usr_password=temp_user_password, usr_name=usr_name, db_file_path=DB_FILE_PATH)
     return Password_Management.get_all_website(usr_password=temp_user_password, usr_name=usr_name,
                                                db_path=f'{DB_FILE_PATH}/db_{usr_name}.json')
+
 
 def add_new_website_action(email: str):
     """
@@ -57,10 +58,25 @@ def add_new_website_action(email: str):
     """
     new_website = request.form.get('new_website')
     new_password = request.form.get('new_password')
+    random_password = True if request.form.get('randomize_password') == 'on' else False
+    if random_password:
+        new_password = Password_Management.generate_password()
+    print(f'{random_password} IS THE PASSWORD RANDOMIZE')
     new_note = request.form.get('new_web_note')
     Password_Management.add_website(db_path=f'{DB_FILE_PATH}/db_{email}.json', usr_password=temp_user_password,
                                     usr_name=email, password=new_password, website_name=new_website,
                                     more_information=new_note)
+
+    # VISUAL UPDATE (maybe do something else later
+    # it is usefull that the user see its new shit
+    password_dictionary = Password_Management.get_password_for_website(ask_website=[new_website],
+                                                                       usr_password=temp_user_password,
+                                                                       usr_name=email,
+                                                                       db_path=f'{DB_FILE_PATH}db_{email}.json')
+    return render_template('home.html', name='Home Page', website_options=get_website_options(usr_name=email),
+                           website=new_website, password=password_dictionary[f"{new_website}"]["password"],
+                           note=password_dictionary[f"{new_website}"]["note"], email=email)
+
 def update_website_action(email: str):
     website = request.form.get('website')
     new_password = request.form.get('new_password')
@@ -149,30 +165,27 @@ def submit(email):
         return redirect(url_for('login'))
     action = request.form.get('action')
     if action == 'get_password':
-        if action == 'get_password':
-            website = request.form.get('website')
-            password_dictionary = Password_Management.get_password_for_website(ask_website=[website],
-                                                                               usr_password=temp_user_password,
-                                                                               usr_name=email,
-                                                                               db_path=f'{DB_FILE_PATH}db_{email}.json')
-
-            return render_template('home.html', name='Home Page', website_options=get_website_options(usr_name=email),
-                                   website=website, password=password_dictionary[f"{website}"]["password"],
-                                   note=password_dictionary[f"{website}"]["note"],email=email)
+        website = request.form.get('website')
+        password_dictionary = Password_Management.get_password_for_website(ask_website=[website],
+                                                                           usr_password=temp_user_password,
+                                                                           usr_name=email,
+                                                                           db_path=f'{DB_FILE_PATH}db_{email}.json')
+        return render_template('home.html', name='Home Page', website_options=get_website_options(usr_name=email),
+                               website=website, password=password_dictionary[f"{website}"]["password"],
+                               note=password_dictionary[f"{website}"]["note"],email=email)
     elif action == 'submit':
         print('action chosen : submit')
         chosen_option = request.form.get('chosen_option')
         print(f'found chosen option = {chosen_option}')
         if chosen_option == 'new_web':
-            add_new_website_action(email)
-
+           return add_new_website_action(email)
         elif chosen_option == 'update_web':
             update_website_action(email)
-
+            return redirect(f'/user/{email}')
         elif chosen_option == 'remove_web':
             remove_website_action(email)
+            return redirect(f'/user/{email}')
     print('action is done')
-    return redirect(f'/user/{email}')
 
 
 
