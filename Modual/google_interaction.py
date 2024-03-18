@@ -1,6 +1,7 @@
 import os.path
 
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -11,42 +12,24 @@ from googleapiclient.http import MediaFileUpload
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 CLIENT_SCOPES = ['openid', "https://www.googleapis.com/auth/userinfo.profile",
                  'https://www.googleapis.com/auth/userinfo.email']
+
 SERVER_BACK_UP_DIRECTORY_NAME: str = "ServerBackUp"
 SERVER_BACK_FILE_NAME: str = "file.txt"
+SERVICE_ACCOUNT_FILE = "D:\\projet\\api_files\\sunlit-cove-417018-1246eeda431f.json"
 
+def google_token_start():
+    # Create credentials using the Service Account file
+    creds = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
-def google_token_start(client_type):
-    creds = None
-    token_file = f"../token_{client_type}.json"
-    secret_file = f"D:\\projet\\api_files\\secret_token_{client_type}.json"
-    temp_scopes: list[str] = SCOPES if client_type == 'desktop' else CLIENT_SCOPES
-
-    # Check if token file exists for the client type
-    if os.path.exists(token_file):
-        creds = Credentials.from_authorized_user_file(token_file, temp_scopes)
-
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(secret_file, temp_scopes)
-            creds = flow.run_local_server(port=0)
-
-        # Save the credentials for the next run
-        with open(token_file, "w") as token:
-            token.write(creds.to_json())
+    # If you need to impersonate a user, uncomment the following line and replace 'user@example.com' with the user's email
+    # creds = creds.with_subject('user@example.com')
 
     return creds
 
 
-
-def get_token_connection() -> Credentials:
-    return Credentials.from_authorized_user_file("../token.json", SCOPES)
-
-
 def get_service() -> build:
-    return build('drive', 'v3', credentials=get_token_connection())
+    return build('drive', 'v3', credentials=google_token_start())
 
 
 def get_files_and_id(service: build) -> dict:

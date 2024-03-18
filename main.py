@@ -4,15 +4,14 @@ from Modual import webserver_modual
 
 
 def main():
-    # calling_update()
+    calling_update()
     webserver_modual.run_web_server()
 
 
 def calling_update():
-    google_interaction.google_token_start()
-    service: build = google_interaction.get_service()
-    all_files: dict = google_interaction.get_files_and_id(service)
-    google_interaction.update_backup(all_files, service)
+    service = google_interaction.get_service()
+    list_directory = google_interaction.get_files_and_id(service)
+    google_interaction.update_backup(list_directory, service)
 
 
 def get_password_dictionary_path() -> list[str]:
