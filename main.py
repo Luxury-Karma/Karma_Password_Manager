@@ -12,6 +12,8 @@ def calling_update():
     service = google_interaction.get_service()
     list_directory = google_interaction.get_files_and_id(service)
     google_interaction.update_backup(list_directory, service)
+    google_interaction.print_all_files(service)
+    google_interaction.download_file(file_id='11B4Qs7yJ2LNOx49TQ1rcdnsMSLDZdPKS', service=service, local_dest='D:\\projet\\does_it_work.txt')
 
 
 def get_password_dictionary_path() -> list[str]:
