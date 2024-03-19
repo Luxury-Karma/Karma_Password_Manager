@@ -34,3 +34,7 @@ I would recommend doing the next step to make it more secure. But in theory the 
 TBD
 # How to set up the DOCKER
 TBD
+
+# How to run the app
+
+TBD but will basically be the -h option.
