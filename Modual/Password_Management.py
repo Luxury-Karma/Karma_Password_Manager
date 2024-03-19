@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from Modual import file_encryption_modual
 from Modual import Password_creator_modual
@@ -152,3 +153,14 @@ def look_user_files(usr_name: str, usr_password: str, db_file_path: str):
         db.close()
     file_encryption_modual.encrypt_file(password=usr_password, user_name=usr_name, filename=db_usr_path_abs)
     print(f'new database created for user {usr_name}')
+
+#TODO: Look if the file is encrypted or not. If it is ensure its stay that way up to the end of the backup
+def get_all_user_files(usr_file_path: str) -> list[str]:
+    """
+        Look at the directory and get all the .json files
+        :param usr_file_path: Where too look at
+        :return: list of all the json in the directory
+        :rtype: list[str]
+    """
+    return [f for f in os.listdir(usr_file_path) if os.path.isfile(f'{usr_file_path}\\{f}'
+                                                              and os.path.splitext(f'{usr_file_path}\\{f}') == '.json')]  # look to all files that SHOULD be encrypted

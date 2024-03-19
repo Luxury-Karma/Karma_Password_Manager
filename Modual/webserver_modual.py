@@ -7,9 +7,8 @@ from oauthlib import oauth2
 from flask import Flask, request, render_template, redirect, session, url_for
 
 # region TEMPORARY USER KEEP
-temp_user_name: str = 'test'
-temp_user_password: str = 'test'
-DB_FILE_PATH: str = './usr_data/'
+temp_user_password: str = 'test' #TODO: Not use test and use some unchangeable value of a google account to create a strong password (maybe?)
+DB_FILE_PATH: str = './usr_data/' #TODO: Receive it as an argument
 # endregion
 
 
@@ -95,12 +94,12 @@ def remove_website_action(email: str):
 #endregion
 
 
-
 @app.route('/')
 def login():
     "Home"
     # redirect to the newly created Sign-In URI
     return redirect(REQ_URI)
+
 
 @app.route('/home')
 def home():
@@ -141,7 +140,6 @@ def home():
     return redirect('/user/%s' % info['email'])
 
 
-
 @app.route('/user/<email>')
 def login_success(email):
     """Landing page after successful login"""
@@ -153,7 +151,6 @@ def login_success(email):
 
     return render_template(template_name_or_list='home.html', name='Home Page',
                            website_options=get_website_options(email),email=email)
-
 
 
 @app.route('/user/<email>/submit', methods=['POST'])
@@ -189,16 +186,16 @@ def submit(email):
 
 
 
-
+#TODO: HANDLE NEW USER AND ADD THERE DATA BASE DURING RUNNING TIME TO THE CHECKUP
 
 
 
 #region User Web Page
 
-def run_web_server():
+def run_web_server(port:int, debug:bool):
     # Set a secret key for the Flask application
     app.secret_key = secrets.token_hex(16)  # Generate a random 16-byte secret key
-    app.run(debug=True, host='0.0.0.0', port=5000, ssl_context='adhoc')
+    app.run(debug=debug, host='0.0.0.0', port=port, ssl_context='adhoc')
 #endregion
 
 
