@@ -6,6 +6,8 @@ from Modual import Password_creator_modual
 import main
 import json
 
+ALLOW_DECRYPTION: bool = True
+
 
 def generate_password() -> str:
     return Password_creator_modual.generate_password(main.get_password_dictionary_path())
@@ -154,7 +156,46 @@ def look_user_files(usr_name: str, usr_password: str, db_file_path: str):
     file_encryption_modual.encrypt_file(password=usr_password, user_name=usr_name, filename=db_usr_path_abs)
     print(f'new database created for user {usr_name}')
 
+
 #TODO: Look if the file is encrypted or not. If it is ensure its stay that way up to the end of the backup
+def get_if_json_readable(file_path: str) -> bool:
+    """
+    This is use to look if we CAN open a file in a json format.
+    Most use of this function is to see if we can freely get access to the json file.
+    We will assume no one played with it for now. Because this would also say it is NOT readable even if a human COULD
+    read it because the format is wrong
+    """
+    try:
+        with open(file_path, 'r') as f:
+            json.loads(f)
+            return False
+    except json.JSONDecodeError:
+        return True
+
+
+def ensure_none_readable_json(directory_path: str) -> bool:
+    """
+    Block the decryption of the files (not really but that's the base plan)
+    get all the files to back up (usr data)
+    ensure we can not open a file ( for now this will be good enough ( I think of MAYBE duplicate every files and one will
+    only be ENCRYPTED so it would not be ONLY a broken JSON or at least less chance )
+    return True if nothing is readable
+    return False if ONE is readable
+
+    Anyway this is a fall safe behind an other encryption we will add BEFORE sending to the backup drive.
+
+    FUTURE: We could try to decrypt the files but this would also mean I KNOW the password of EVERY user wich is not acceptable.
+    """
+    global ALLOW_DECRYPTION
+    ALLOW_DECRYPTION = False
+    list_of_files = [os.path.join(directory_path, e) for e in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path,e))
+                     and os.path.splitext(e)[1]]  # get all the files in the dictionary
+    for e in list_of_files:
+        if get_if_json_readable(e):
+            return False
+    return True
+
+
 def get_all_user_files(usr_file_path: str) -> list[str]:
     """
         Look at the directory and get all the .json files

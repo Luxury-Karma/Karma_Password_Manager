@@ -22,6 +22,7 @@ def create_parser() -> argparse:
 
 
 def main():
+
     args = create_parser()
     backup_thread = threading.Thread(target=Backup, args=(args.time_to_backup,))
     backup_thread.start()
