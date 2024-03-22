@@ -6,11 +6,24 @@ from Modual import Password_creator_modual
 import main
 import json
 
-ALLOW_DECRYPTION: bool = True
-
 
 def generate_password() -> str:
     return Password_creator_modual.generate_password(main.get_password_dictionary_path())
+
+
+def get_usr_db_info(db_path: str, usr_password: str, usr_name: str ) -> dict:
+    usr_db = file_encryption_modual.decrypt_information_from_file(file_to_decrypt_path=db_path, password=usr_password,
+                                                                  user_name=usr_name)
+    if usr_db == {"ERROR": True}:
+        print("ERROR the file was not able to be decrypted")
+        return {"ERROR": True}
+    return usr_db
+
+
+def encrypt_usr_db_info(usr_password: str, db_path: str, usr_name: str):
+    if not file_encryption_modual.encrypt_file(password=usr_password, filename=db_path, user_name=usr_name):
+        print("MAJOR ERROR WAS NOT ABLE TO ENCRYPT THE FILE")
+
 
 
 def open_json_file(json_path: str) -> dict:
@@ -37,16 +50,17 @@ def add_website(db_path: str, usr_name: str, usr_password: str, website_name: st
     :return: None
     :rtype: None
     """
-    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path, user_name=usr_name, password=usr_password):
-        print("File was not able to be decripted.")
+    usr_db = get_usr_db_info(db_path=db_path, usr_password=usr_password, usr_name=usr_name)
+
+    if usr_db == {"ERROR": True}:
+        print("No data could be fetched")
         return
 
     Password_creator_modual.add_password_to_db(password=password, more_information=more_information,
                                                website=website_name,
                                                data_base_path=db_path)
 
-    if not file_encryption_modual.encrypt_file(password=usr_password, filename=db_path, user_name=usr_name):
-        print("MAJOR ERROR WAS NOT ABLE TO ENCRYPT THE FILE")
+    encrypt_usr_db_info(usr_password=usr_password, usr_name=usr_name, db_path=db_path)
 
 
 def update_website(db_path: str, usr_name: str, usr_password: str, website_name: str, new_password: str,
@@ -62,35 +76,29 @@ def update_website(db_path: str, usr_name: str, usr_password: str, website_name:
     :return: None
     :rtype: None
     """
-    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path, password=usr_password, user_name=usr_name):
-        print("ERROR the file was not able to be decrypted")
-    db: dict = open_json_file(db_path)
-    website_information: dict = db[website_name]
+    usr_db = get_usr_db_info(db_path=db_path,usr_name=usr_name,usr_password=usr_password)
+
+    website_information: dict = usr_db[website_name]
+
     if new_password == '' or new_password == None:
         new_password = website_information['password']
         print('No Need to change the password!')
+
     if new_more_information == '' or new_more_information == None:
         new_more_information = website_information['note']
         print('No need to change the more information!')
+
     website_information['note'] = new_more_information
     website_information['password'] = new_password
-    db[website_name] = website_information
-    with open(db_path, 'w') as db_f:
-        json.dump(db, db_f)
+    usr_db[website_name] = website_information
 
-    if not file_encryption_modual.encrypt_file(password=usr_password, user_name=usr_name, filename=db_path):
-        print("MAJOR ERROR WAS NOT ABLE TO ENCRYPT THE FILE")
+    encrypt_usr_db_info(usr_password=usr_password,usr_name=usr_name,db_path=db_path)
 
 
 def remove_website(db_path: str, usr_name: str, usr_password: str, website_name: str):
-    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path,user_name=usr_name,password=usr_password):
-        print("ERROR, could not decrypt file")
-    usr_db = open_json_file(db_path)
+    usr_db = get_usr_db_info(db_path=db_path, usr_name=usr_name, usr_password=usr_password)
     usr_db.pop(website_name, None)
-    with open(db_path, 'w') as db_f:
-        json.dump(usr_db, db_f)
-    if not file_encryption_modual.encrypt_file(password=usr_password,user_name=usr_name,filename=db_path):
-        print("MAJOR ERROR, could not encrypt file")
+    encrypt_usr_db_info(usr_password=usr_password, usr_name=usr_name, db_path=db_path)
 
 
 def get_all_website(db_path: str, usr_name: str, usr_password: str) -> list[str]:
@@ -126,15 +134,9 @@ def get_password_for_website(db_path: str, usr_name: str, usr_password: str, ask
     """
     print(f"DB PATH IS : {db_path}")
     password_asked: dict = {}
-    db_info: dict = {}
+    usr_db = get_usr_db_info(usr_password=usr_password, usr_name=usr_name, db_path=db_path)
 
-    if not file_encryption_modual.decrypt_file(password=usr_password, user_name=usr_name, file_to_decrypt_path=db_path):
-        print("ERROR NOT ABLE TO DECRYPT")
-    db_info.update(open_json_file(db_path))
-    if not file_encryption_modual.encrypt_file(usr_password, db_path, usr_name):
-        print("MAJOR ERROR NOT ABLE TO ENCRYPT THE FILE.")
-
-    for key, value in db_info.items():
+    for key, value in usr_db.items():
         if key not in ask_website:
             continue
         password_asked[key] = value
@@ -143,7 +145,7 @@ def get_password_for_website(db_path: str, usr_name: str, usr_password: str, ask
 
 
 def look_user_files(usr_name: str, usr_password: str, db_file_path: str):
-    db_usr_path:str = f'{db_file_path}db_{usr_name}.json'
+    db_usr_path: str = f'{db_file_path}db_{usr_name}.json'
     db_usr_path_abs: str = os.path.abspath(db_usr_path)
     print(f"file location should be : {db_usr_path_abs}\n PATH RECEIVED: {db_usr_path}\nActive Directory {os.getcwd()}")
     if os.path.exists(db_usr_path_abs):
@@ -173,27 +175,19 @@ def get_if_json_readable(file_path: str) -> bool:
         return True
 
 
-def ensure_none_readable_json(directory_path: str) -> bool:
+def ensure_none_readable_json(directory_path: str) -> list[str]:
     """
-    Block the decryption of the files (not really but that's the base plan)
-    get all the files to back up (usr data)
-    ensure we can not open a file ( for now this will be good enough ( I think of MAYBE duplicate every files and one will
-    only be ENCRYPTED so it would not be ONLY a broken JSON or at least less chance )
-    return True if nothing is readable
-    return False if ONE is readable
-
-    Anyway this is a fall safe behind an other encryption we will add BEFORE sending to the backup drive.
-
-    FUTURE: We could try to decrypt the files but this would also mean I KNOW the password of EVERY user wich is not acceptable.
+    This is a fall safe to ensure if someone manually decrypt a json and forgot the encrypt it we will not back it up.
+    This should only affect the decrypted files. the other one should still be backed up
     """
-    global ALLOW_DECRYPTION
-    ALLOW_DECRYPTION = False
-    list_of_files = [os.path.join(directory_path, e) for e in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path,e))
-                     and os.path.splitext(e)[1]]  # get all the files in the dictionary
+    list_of_files = get_all_user_files(directory_path)
+    list_of_readable_files = []
     for e in list_of_files:
-        if get_if_json_readable(e):
-            return False
-    return True
+        if not get_if_json_readable(e):
+            continue
+        list_of_readable_files.append(e)
+
+    return list_of_readable_files
 
 
 def get_all_user_files(usr_file_path: str) -> list[str]:

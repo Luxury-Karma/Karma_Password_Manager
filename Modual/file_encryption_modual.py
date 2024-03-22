@@ -136,7 +136,7 @@ def decrypt_information_from_file(password, file_to_decrypt_path, user_name) -> 
     salt = open_salt(usr_name=user_name)
     if salt == b'':
         print('Error no salt loaded')
-        return {}
+        return {"ERROR": True}
 
     # Derive the key from the password and salt
     key = base64.urlsafe_b64encode(derive_salt(salt).derive(password.encode()))
@@ -151,14 +151,14 @@ def decrypt_information_from_file(password, file_to_decrypt_path, user_name) -> 
             cipher_text = f.read()
     except FileNotFoundError:
         print("File to decrypt not found.")
-        return {}
+        return {"ERROR": True}
 
     try:
         # Decrypt the data
         plain_text = cipher_suite.decrypt(cipher_text)
     except InvalidToken:
         print("Invalid key or corrupted ciphertext.")
-        return {}
+        return {"ERROR": True}
 
     return json.loads(plain_text)
 
