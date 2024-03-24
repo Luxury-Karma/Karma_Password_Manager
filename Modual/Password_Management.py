@@ -159,43 +159,4 @@ def look_user_files(usr_name: str, usr_password: str, db_file_path: str):
     print(f'new database created for user {usr_name}')
 
 
-#TODO: Look if the file is encrypted or not. If it is ensure its stay that way up to the end of the backup
-def get_if_json_readable(file_path: str) -> bool:
-    """
-    This is use to look if we CAN open a file in a json format.
-    Most use of this function is to see if we can freely get access to the json file.
-    We will assume no one played with it for now. Because this would also say it is NOT readable even if a human COULD
-    read it because the format is wrong
-    """
-    try:
-        with open(file_path, 'r') as f:
-            json.loads(f)
-            return False
-    except json.JSONDecodeError:
-        return True
 
-
-def ensure_none_readable_json(directory_path: str) -> list[str]:
-    """
-    This is a fall safe to ensure if someone manually decrypt a json and forgot the encrypt it we will not back it up.
-    This should only affect the decrypted files. the other one should still be backed up
-    """
-    list_of_files = get_all_user_files(directory_path)
-    list_of_readable_files = []
-    for e in list_of_files:
-        if not get_if_json_readable(e):
-            continue
-        list_of_readable_files.append(e)
-
-    return list_of_readable_files
-
-
-def get_all_user_files(usr_file_path: str) -> list[str]:
-    """
-        Look at the directory and get all the .json files
-        :param usr_file_path: Where too look at
-        :return: list of all the json in the directory
-        :rtype: list[str]
-    """
-    return [f for f in os.listdir(usr_file_path) if os.path.isfile(f'{usr_file_path}\\{f}'
-                                                              and os.path.splitext(f'{usr_file_path}\\{f}') == '.json')]  # look to all files that SHOULD be encrypted
