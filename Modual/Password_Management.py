@@ -49,6 +49,7 @@ def add_website(db_path: str, usr_name: str, usr_password: str, website_name: st
     :return: None
     :rtype: None
     """
+    print(f"RECEIVED PASSWORD: {usr_password}")
     usr_db = get_usr_db_info(db_path=db_path, usr_password=usr_password, usr_name=usr_name)
 
     if usr_db == {"ERROR": True}:

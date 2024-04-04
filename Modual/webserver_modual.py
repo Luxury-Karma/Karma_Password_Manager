@@ -7,14 +7,13 @@ from oauthlib import oauth2
 from flask import Flask, request, render_template, redirect, session, url_for
 
 # region TEMPORARY USER KEEP
-temp_user_password: str = 'test' #TODO: Not use test and use some unchangeable value of a google account to create a strong password (maybe?)
-DB_FILE_PATH: str = './usr_data/' #TODO: Receive it as an argument
+temp_user_password: str = 'test'  # TODO: Not use test and use some unchangeable value of a google account to create a strong password (maybe?)
+DB_FILE_PATH: str = './usr_data/'  # TODO: Receive it as an argument
 # endregion
 
 
-
 read_client = Password_Management.open_json_file("D:\\projet\\api_files\\secret_token_webapp.json")
-CLIENT_ID = read_client['installed']['client_id']   # IN ABSOLUTLY NO CASE PUT THE REAL ONE IN GIT
+CLIENT_ID = read_client['installed']['client_id']  # IN ABSOLUTLY NO CASE PUT THE REAL ONE IN GIT
 CLIENT_SECRET = read_client['installed']['client_secret']  # IN ABSOLUTLY NO CASE PUT THE REAL ONE IN GIT
 
 DATA = {
@@ -33,6 +32,7 @@ URL_DICT = {
 
 # Create a Sign in URI
 CLIENT = oauth2.WebApplicationClient(CLIENT_ID)
+
 REQ_URI = CLIENT.prepare_request_uri(
     uri=URL_DICT['google_oauth'],
     redirect_uri=DATA['redirect_uri'],
@@ -42,10 +42,13 @@ REQ_URI = CLIENT.prepare_request_uri(
 app = Flask(__name__, template_folder='../HTML')
 
 
-#region SCRIPT
+# region SCRIPT
+
 def get_website_options(usr_name: str):
-    Password_Management.look_user_files(usr_password=temp_user_password, usr_name=usr_name, db_file_path=DB_FILE_PATH)
-    return Password_Management.get_all_website(usr_password=temp_user_password, usr_name=usr_name,
+    Password_Management.look_user_files(usr_password=session['password'], usr_name=session['email'],
+                                        db_file_path=DB_FILE_PATH)
+
+    return Password_Management.get_all_website(usr_password=session['password'], usr_name=usr_name,
                                                db_path=f'{DB_FILE_PATH}/db_{usr_name}.json')
 
 
@@ -56,25 +59,32 @@ def add_new_website_action(email: str):
     :rtype: None
     """
     new_website = request.form.get('new_website')
+    print(f"new website : {new_website}")
     new_password = request.form.get('new_password')
+    print(f"new password: {new_password}")
     random_password = True if request.form.get('randomize_password') == 'on' else False
+    print(f"random password : {random_password}")
     if random_password:
         new_password = Password_Management.generate_password()
+        print(f"the random password: {random_password}")
     print(f'{random_password} IS THE PASSWORD RANDOMIZE')
     new_note = request.form.get('new_web_note')
-    Password_Management.add_website(db_path=f'{DB_FILE_PATH}/db_{email}.json', usr_password=temp_user_password,
+    print(f'the note: {new_note}')
+
+    Password_Management.add_website(db_path=f'{DB_FILE_PATH}/db_{email}.json', usr_password=session['password'],
                                     usr_name=email, password=new_password, website_name=new_website,
                                     more_information=new_note)
 
     # VISUAL UPDATE (maybe do something else later
     # it is usefull that the user see its new shit
     password_dictionary = Password_Management.get_password_for_website(ask_website=[new_website],
-                                                                       usr_password=temp_user_password,
-                                                                       usr_name=email,
-                                                                       db_path=f'{DB_FILE_PATH}db_{email}.json')
+                                                                       usr_password=session['password'],
+                                                                       usr_name=session['email'],
+                                                                       db_path=f'{DB_FILE_PATH}db_{session["email"]}.json')
     return render_template('home.html', name='Home Page', website_options=get_website_options(usr_name=email),
                            website=new_website, password=password_dictionary[f"{new_website}"]["password"],
                            note=password_dictionary[f"{new_website}"]["note"], email=email)
+
 
 def update_website_action(email: str):
     website = request.form.get('website')
@@ -87,11 +97,12 @@ def update_website_action(email: str):
 
 def remove_website_action(email: str):
     website = request.form.get('website')
-    Password_Management.remove_website(db_path=f'{DB_FILE_PATH}/db_{email}.json', website_name=website, usr_password=temp_user_password,
+    Password_Management.remove_website(db_path=f'{DB_FILE_PATH}/db_{email}.json', website_name=website,
+                                       usr_password=temp_user_password,
                                        usr_name=email)
 
 
-#endregion
+# endregion
 
 
 @app.route('/')
@@ -137,7 +148,7 @@ def home():
     # Store user's email in the session
     session['email'] = info['email']
 
-    return redirect(f'/user/{info["email"]}/decrypt')
+    return redirect(f'/user/{session["email"]}/decrypt')
 
 
 @app.route('/user/<email>/decrypt')
@@ -150,10 +161,7 @@ def decrypt_page(email):
     """
     if 'email' not in session or session['email'] != email:
         return redirect(url_for('login'))
-    return render_template(template_name_or_list='loggin.html', name='decrypt page',email=email)
-
-
-
+    return render_template(template_name_or_list='loggin.html', name='decrypt page', email=email)
 
 
 @app.route('/user/<email>', methods=['POST'])
@@ -168,19 +176,17 @@ def login_success(email):
     if 'email' not in session or session['email'] != email:
         # If not authenticated, redirect to the login page
         return redirect(url_for('login'))
-
-    session['password'] = request.form.get("password")
+    session['password'] = request.form.get('password')
     return render_template(template_name_or_list='home.html', name='Home Page',
-                           website_options=get_website_options(email), email=email)
+                           website_options=get_website_options(email), email=session['email'])
 
 
 @app.route('/user/<email>/submit', methods=['POST'])
-def submit():
+def submit(email):
     """
     Acting on every possible action. This will be with what the user interact the most
     to decrypt this is still using the password the user gave at the begining.
     """
-    email = session['email']
     # Check if the user is authenticated
     if 'email' not in session or session['email'] != email:
         # If not authenticated, redirect to the login page
@@ -195,14 +201,14 @@ def submit():
                                                                            db_path=f'{DB_FILE_PATH}db_{email}.json')
         return render_template('home.html', name='Home Page', website_options=get_website_options(usr_name=email),
                                website=website, password=password_dictionary[f"{website}"]["password"],
-                               note=password_dictionary[f"{website}"]["note"],email=email)
+                               note=password_dictionary[f"{website}"]["note"], email=email)
     elif action == 'submit':
         print('action chosen : submit')
         chosen_option = request.form.get('chosen_option')
         print(f'found chosen option = {chosen_option}')
 
         if chosen_option == 'new_web':
-           return add_new_website_action(email)
+            return add_new_website_action(email)
 
         elif chosen_option == 'update_web':
             update_website_action(email)
@@ -214,17 +220,14 @@ def submit():
     print('action is done')
 
 
+# TODO: HANDLE NEW USER AND ADD THERE DATA BASE DURING RUNNING TIME TO THE CHECKUP
+# TODO: We keep the temp password in the session variable. Now we will be able to use our encryption correctly
 
-#TODO: HANDLE NEW USER AND ADD THERE DATA BASE DURING RUNNING TIME TO THE CHECKUP
-#TODO: We keep the temp password in the session variable. Now we will be able to use our encryption correctly
 
+# region User Web Page
 
-#region User Web Page
-
-def run_web_server(port:int, debug:bool):
+def run_web_server(port: int, debug: bool):
     # Set a secret key for the Flask application
     app.secret_key = secrets.token_hex(16)  # Generate a random 16-byte secret key
     app.run(debug=debug, host='0.0.0.0', port=port, ssl_context='adhoc')
-#endregion
-
-
+# endregion
