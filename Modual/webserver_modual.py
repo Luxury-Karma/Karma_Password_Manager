@@ -137,24 +137,50 @@ def home():
     # Store user's email in the session
     session['email'] = info['email']
 
-    return redirect('/user/%s' % info['email'])
+    return redirect(f'/user/{info["email"]}/decrypt')
 
 
-@app.route('/user/<email>')
+@app.route('/user/<email>/decrypt')
+def decrypt_page(email):
+    """
+    First page arriving after login with google and ensuring the user is the user he pretend.
+    This is to get the password to decrypt all the user data base
+    This is then going to -> /user/<email>
+    This should send (and keep for the session) the password so we can decrypt and encrypt
+    """
+    if 'email' not in session or session['email'] != email:
+        return redirect(url_for('login'))
+    return render_template(template_name_or_list='loggin.html', name='decrypt page',email=email)
+
+
+
+
+
+@app.route('/user/<email>', methods=['POST'])
 def login_success(email):
-    """Landing page after successful login"""
-
+    """
+    Landing page after successful login
+    this should receive the user password from the url /user/<email>/decrypt
+    this will open an empty page and show all the option and the website already there.
+    this will send the user to -> /user/<email>/submit to receive the information the user is asking or creating
+    """
     # Check if the user is authenticated
     if 'email' not in session or session['email'] != email:
         # If not authenticated, redirect to the login page
         return redirect(url_for('login'))
 
+    session['password'] = request.form.get("password")
     return render_template(template_name_or_list='home.html', name='Home Page',
-                           website_options=get_website_options(email),email=email)
+                           website_options=get_website_options(email), email=email)
 
 
 @app.route('/user/<email>/submit', methods=['POST'])
-def submit(email):
+def submit():
+    """
+    Acting on every possible action. This will be with what the user interact the most
+    to decrypt this is still using the password the user gave at the begining.
+    """
+    email = session['email']
     # Check if the user is authenticated
     if 'email' not in session or session['email'] != email:
         # If not authenticated, redirect to the login page
@@ -174,11 +200,14 @@ def submit(email):
         print('action chosen : submit')
         chosen_option = request.form.get('chosen_option')
         print(f'found chosen option = {chosen_option}')
+
         if chosen_option == 'new_web':
            return add_new_website_action(email)
+
         elif chosen_option == 'update_web':
             update_website_action(email)
             return redirect(f'/user/{email}')
+
         elif chosen_option == 'remove_web':
             remove_website_action(email)
             return redirect(f'/user/{email}')
@@ -187,7 +216,7 @@ def submit(email):
 
 
 #TODO: HANDLE NEW USER AND ADD THERE DATA BASE DURING RUNNING TIME TO THE CHECKUP
-
+#TODO: We keep the temp password in the session variable. Now we will be able to use our encryption correctly
 
 
 #region User Web Page

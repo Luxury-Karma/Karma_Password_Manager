@@ -11,7 +11,7 @@ def generate_password() -> str:
     return Password_creator_modual.generate_password(main.get_password_dictionary_path())
 
 
-def get_usr_db_info(db_path: str, usr_password: str, usr_name: str ) -> dict:
+def get_usr_db_info(db_path: str, usr_password: str, usr_name: str) -> dict:
     usr_db = file_encryption_modual.decrypt_information_from_file(file_to_decrypt_path=db_path, password=usr_password,
                                                                   user_name=usr_name)
     if usr_db == {"ERROR": True}:
@@ -23,7 +23,6 @@ def get_usr_db_info(db_path: str, usr_password: str, usr_name: str ) -> dict:
 def encrypt_usr_db_info(usr_password: str, db_path: str, usr_name: str):
     if not file_encryption_modual.encrypt_file(password=usr_password, filename=db_path, user_name=usr_name):
         print("MAJOR ERROR WAS NOT ABLE TO ENCRYPT THE FILE")
-
 
 
 def open_json_file(json_path: str) -> dict:
@@ -56,11 +55,9 @@ def add_website(db_path: str, usr_name: str, usr_password: str, website_name: st
         print("No data could be fetched")
         return
 
-    Password_creator_modual.add_password_to_db(password=password, more_information=more_information,
-                                               website=website_name,
-                                               data_base_path=db_path)
-
-    encrypt_usr_db_info(usr_password=usr_password, usr_name=usr_name, db_path=db_path)
+    add_password_to_db(password=password, more_information=more_information,
+                       website=website_name, data_base_path=db_path, db=usr_db,
+                       usr_password=usr_password, usr_name=usr_name)
 
 
 def update_website(db_path: str, usr_name: str, usr_password: str, website_name: str, new_password: str,
@@ -76,7 +73,7 @@ def update_website(db_path: str, usr_name: str, usr_password: str, website_name:
     :return: None
     :rtype: None
     """
-    usr_db = get_usr_db_info(db_path=db_path,usr_name=usr_name,usr_password=usr_password)
+    usr_db = get_usr_db_info(db_path=db_path, usr_name=usr_name, usr_password=usr_password)
 
     website_information: dict = usr_db[website_name]
 
@@ -92,7 +89,7 @@ def update_website(db_path: str, usr_name: str, usr_password: str, website_name:
     website_information['password'] = new_password
     usr_db[website_name] = website_information
 
-    encrypt_usr_db_info(usr_password=usr_password,usr_name=usr_name,db_path=db_path)
+    encrypt_usr_db_info(usr_password=usr_password, usr_name=usr_name, db_path=db_path)
 
 
 def remove_website(db_path: str, usr_name: str, usr_password: str, website_name: str):
@@ -111,14 +108,15 @@ def get_all_website(db_path: str, usr_name: str, usr_password: str) -> list[str]
     :rtype: list[str]
     """
     all_website: list[str] = []
-    db_info: dict = {}
-    if not file_encryption_modual.decrypt_file(file_to_decrypt_path=db_path, user_name=usr_name, password=usr_password):
-        print("ERROR")
-    db_info.update(open_json_file(db_path))
-    if not file_encryption_modual.encrypt_file(usr_password, db_path, usr_name):
-        print("MAJOR ERROR NOT ABLE TO ENCRYPT THE FILE.")
-    for key, value in db_info.items():
+
+    json_info = file_encryption_modual.decrypt_information_from_file(password=usr_password,
+                                                                     file_to_decrypt_path=db_path,
+                                                                     user_name=usr_name)
+
+
+    for key, value in json_info.items():
         all_website.append(key)
+
     return all_website
 
 
@@ -149,9 +147,8 @@ def look_user_files(usr_name: str, usr_password: str, db_file_path: str):
     db_usr_path_abs: str = os.path.abspath(db_usr_path)
     print(f"file location should be : {db_usr_path_abs}\n PATH RECEIVED: {db_usr_path}\nActive Directory {os.getcwd()}")
     if os.path.exists(db_usr_path_abs):
-        print('User data exist ! yay')
         return
-    random_dictionary = {'Whait this is empty!':{'password':'yes','note':'\'cause your dumb'}}
+    random_dictionary = {}
     with open(db_usr_path_abs, 'w') as db:
         json.dump(random_dictionary, db)
         db.close()
@@ -159,4 +156,23 @@ def look_user_files(usr_name: str, usr_password: str, db_file_path: str):
     print(f'new database created for user {usr_name}')
 
 
+def add_password_to_db(password: str, more_information: str, website: str, data_base_path: str, db: dict,
+                       usr_password: str, usr_name: str) -> bool:
+    """
+    Format and add a password to a data base
+    :param password: password for the website
+    :param more_information: any good information to have about the website
+    :param website: where will this password be use
+    :param data_base_path: where is the db file
+    :return: If we could update it or not
+    :rtype: bool
+    """
+    new_password = Password_creator_modual.make_password_format(website, more_information, password)
+    if not os.path.exists(data_base_path):
+        open(data_base_path, 'x').close()
 
+    db.update(new_password)
+    if file_encryption_modual.encrypt_information_to_file(usr_password=usr_password, usr_name=usr_name,
+                                                          file_to_save=data_base_path, data_to_encrypt=db):
+        return True
+    return False

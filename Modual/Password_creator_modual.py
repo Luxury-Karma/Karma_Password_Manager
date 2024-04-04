@@ -76,34 +76,3 @@ def make_password_format(website: str, more_information: str, password: str) -> 
     }
 
 
-def add_password_to_db(password: str, more_information: str, website: str, data_base_path: str) -> bool:
-    """
-    Correctly format and place the password inside the db
-    :param password: password for the website
-    :param more_information: any good information to have about the website
-    :param website: where will this password be use
-    :param data_base_path: where is the db file
-    :return: If we could update it or not
-    :rtype: bool
-    """
-    new_password = make_password_format(website, more_information, password)
-    if not os.path.exists(data_base_path):
-        open(data_base_path, 'x').close()
-
-    db_info: dict = {}
-    with open(data_base_path, 'r') as db:
-        try:
-            db_info = json.load(db)
-        except json.JSONDecodeError:
-            pass
-
-    db_info.update(new_password)
-
-    with open(data_base_path, 'w') as db:
-        try:
-            json.dump(db_info, db)
-        except (TypeError, OSError) as e:
-            print(f"Could not save the password due to error: {e}")
-            return False
-
-    return True
