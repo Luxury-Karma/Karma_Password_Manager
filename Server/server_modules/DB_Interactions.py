@@ -76,9 +76,10 @@ def get_user_hash(db_path: str, master_user_name: str):
     connection.close()
     return hash
 
-def add_password_to_db(db_path: str, website: str, password: str, creation_date: str):
+
+def add_password_to_db(db_path: str, website: str, website_user_name:str, password: str, creation_date: str):
     connection, cursor = __sql_workers(db_path)
-    cursor.execute(f'INSERT INTO user_password VALUES ("{website}", "{password}", "{creation_date}")')
+    cursor.execute(f'INSERT INTO user_password VALUES ("{website}","{website_user_name}", "{password}", "{creation_date}")')
     connection.commit()
     connection.close()
 
@@ -96,7 +97,14 @@ def fetch_all_website(db_path):
     cursor.execute("SELECT website FROM user_password")
     data = cursor.fetchall()
     connection.close()
-    return data
+    return data[0][0]
+
+def fetch_password_for_website(db_path:str, website:str):
+    connection, cursor = __sql_workers(db_path)
+    cursor.execute('SELECT password FROM user_password')
+    data = cursor.fetchall()
+    connection.close()
+    return data[0][0]
 
 
 def update_password_for_specific_website(db_path: str, new_password: str, modification_date: str, website: str):

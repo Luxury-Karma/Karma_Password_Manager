@@ -16,8 +16,16 @@ def create_user(user_name: str, salt, hash_verification)->bool:
     if not DB_Interactions.__create_new_server_user(db_path='DB/server_user_db.db', master_user_name=user_name, hash=hash_verification, salt=salt):
         print("Username already present in the database")
         return False
+
+    DB_Interactions.create_user_db(db_path=f'user_data/{user_name}.db')
     return True
 
+
+def add_new_password(user_name: str, website:str, password:str, website_user_name:str):
+    DB_Interactions.add_password_to_db(db_path=f'user_data/{user_name}.db', password=password, website=website, creation_date='2024-09-28', website_user_name=website_user_name)
+
+def get_password_for_website(user_name: str, website:str):
+    return DB_Interactions.fetch_password_for_website(db_path=f'user_data/{user_name}.db', website='netflix')
 
 def get_user_salt(user_name: str):
     salt_clean = DB_Interactions.get_user_salt(db_path='DB/server_user_db.db', master_user_name=user_name)
