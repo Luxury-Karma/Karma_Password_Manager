@@ -8,6 +8,7 @@ def main():
     DB_Interactions.__create_server_db(db_path='DB/server_user_db.db')
 
 
+
 def is_free_username(testing_username:str)->bool:
     return DB_Interactions.user_verification(db_path='DB/server_user_db.db',user_to_verify=testing_username)
 

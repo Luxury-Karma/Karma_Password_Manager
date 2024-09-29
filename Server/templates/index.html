@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Encryption</title>
+    <script src="{{ url_for('static', filename='client_encryption.js') }}"></script> <!-- Ensure this is correct -->
+</head>
+<body>
+    <h1>Testing JavaScript Encryption</h1>
+
+    <form id="encryption-form" onsubmit="login(event)">
+        <p>Enter Username: </p>
+        <p><input type="text" name="un" id="username" required /></p>
+        <p>Enter Master Password: </p>
+        <p><input type="password" name="ps" id="master-password" required /></p>
+        <p><input type="submit" value="submit" /></p>
+    </form>
+
+    <script>
+    async function login(event) {
+    event.preventDefault(); // Prevent the form from submitting the traditional way
+
+    const username = document.querySelector('input[name="un"]').value;
+
+    // Fetch the salt from the server
+    const response = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ un: username })
+    });
+
+    if (!response.ok) {
+        alert("User not found");
+        return;
+    }
+
+    const data = await response.json();
+
+    if (data.salt) {
+        const masterPassword = document.querySelector('input[name="ps"]').value;
+
+        // Hash the master password with the received salt
+        const salt = new Uint8Array(data.salt.match(/[\da-f]{2}/gi).map(h => parseInt(h, 16)));
+        const hash = await hash_password(masterPassword, salt); // Implement this hashing function
+
+        // Send the username and the hash back to the server
+        const verificationResponse = await fetch('/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ un: username, hash: hash })
+        });
+
+        if (verificationResponse.ok) {
+            alert('Verification successful!');
+        } else {
+            alert('Verification failed!');
+        }
+    }
+}
+
+    // Implement the hash_password function according to your hashing logic
+    async function hash_password(password, salt) {
+    const encoder = new TextEncoder();
+    const encodedPassword = encoder.encode(password);
+    
+    // Import the salt as a key
+    const importedSalt = await crypto.subtle.importKey('raw', salt, 'PBKDF2', false, ['deriveBits']);
+    
+    // Derive a key using PBKDF2
+    const derivedKey = await crypto.subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt: importedSalt,
+            iterations: 100000,
+            hash: 'SHA-256'
+        },
+        await crypto.subtle.importKey('raw', encodedPassword, 'raw', false, ['sign']),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+
+    // Generate the hash
+    const hashBuffer = await crypto.subtle.sign('HMAC', derivedKey, encodedPassword);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+    </script>
+</body>
+</html>

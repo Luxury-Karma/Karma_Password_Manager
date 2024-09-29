@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="{{ url_for('static', filename='client_encryption.js') }}"></script> <!-- Ensure this is correct -->
+</head>
+<body>
+
+<form id="encryption-form" onsubmit="handleFormSubmit(event)">
+
+    <p>Enter Username: </p>
+    <p><input type="text" name="un" id="username" required /></p>
+    <p>Enter Master Password: </p>
+    <p><input type="password" name="ps" id="master-password" required /></p>
+    <p>Reenter Master Password: </p>
+    <p><input type="password" name="ps" id="remaster-password" required /></p>
+
+    <p><input type="submit" value="submit" /></p>
+
+</form>
+
+<script>
+async function generateSalt(length = 32) {
+    const saltArray = crypto.getRandomValues(new Uint8Array(length));
+    return Array.from(saltArray).map(byte => byte.toString(16).padStart(2, '0')).join(''); // Convert to hex string
+}
+
+// Function to hash a password using PBKDF2 with SHA-256
+async function hashPassword(password, salt, iterations = 100000, keyLength = 32) {
+    const encoder = new TextEncoder();
+    const passwordBytes = encoder.encode(password);
+    const saltBytes = encoder.encode(salt);
+
+    // Generate the hash using PBKDF2
+    const hashBuffer = await crypto.subtle.importKey(
+        'raw',
+        passwordBytes,
+        { name: 'PBKDF2' },
+        false,
+        ['deriveBits', 'deriveKey']
+    );
+
+    const keyBuffer = await crypto.subtle.deriveBits(
+        {
+            name: 'PBKDF2',
+            salt: saltBytes,
+            iterations: iterations,
+            hash: 'SHA-256',
+        },
+        hashBuffer,
+        keyLength * 8 // Convert to bits
+    );
+
+    // Convert the hash to a hex string
+    return Array.from(new Uint8Array(keyBuffer))
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+async function handleFormSubmit(event) {
+    event.preventDefault(); // Prevent the default form submission
+    console.log("Let's start!");
+    
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('master-password').value;
+    const rePassword = document.getElementById('remaster-password').value;
+
+    // Check if both passwords match
+    if (password !== rePassword) {
+        alert("Passwords do not match!");
+        return false; // Prevent form submission
+    }
+
+    // Generate salt
+    const salt = await generateSalt();
+    console.log(`Generated Salt: ${salt}`);
+
+    // Proceed to hash the password
+    const hashedPassword = await hashPassword(password, salt);
+    console.log(`Hashed Password: ${hashedPassword}`);
+
+    // Send data to the server
+    const data = {
+        username: username,
+        hashedPassword: hashedPassword,
+        salt: salt
+    };
+
+    try {
+        const response = await fetch('/your-server-endpoint', { // Replace with your server endpoint
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const result = await response.json();
+        console.log('Server response:', result);
+        alert('Registration successful!');
+    } catch (error) {
+        console.error('Error sending data to the server:', error);
+        alert('Error during registration. Please try again.');
+    }
+}
+</script>
+
+</body>
+</html>

@@ -8,5 +8,20 @@
 <body>
     <h1>Testing JavaScript Encryption</h1>
     <script src="client_encryption.js"></script>
+    <script>
+        // Add an event listener to the form submission
+        document.getElementById('encryptionForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const masterPassword = 'your_master_password'; // Replace this with the actual master password
+            const username = document.getElementById('username').value;
+
+            // Call the encryptString function
+            const encryptedData = await encryptString(masterPassword, username);
+
+            // Log the encrypted data to the console for now
+            console.log('Encrypted Data:', encryptedData);
+            // You can also send this data to the server if needed
+    </script>
 </body>
 </html>
