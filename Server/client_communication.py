@@ -1,5 +1,3 @@
-import hashlib
-import os
 import server_main
 import os
 import hashlib
@@ -8,6 +6,9 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+import string
+import random
+
 # --- Constants ---
 SALT_LENGTH = 32  # 32 bytes for the salt
 HASH_ITERATIONS = 100000  # Number of iterations for PBKDF2
@@ -33,6 +34,7 @@ def hash_password(master_password: str, salt: bytes):
         dklen=HASH_LENGTH  # Derived key length
     )
 
+
 # Function to derive an AES encryption key from the master password
 def derive_key(master_password: str, salt: bytes):
     kdf = PBKDF2HMAC(
@@ -43,6 +45,7 @@ def derive_key(master_password: str, salt: bytes):
         backend=default_backend()
     )
     return kdf.derive(master_password.encode('utf-8'))
+
 
 # Function to encrypt a password using AES
 def encrypt_password(master_password: str, password: str):
@@ -96,7 +99,6 @@ def create_account(username, master_password: str):
     print("Account created!")
 
 
-
 # Example: Authenticating a user during login
 def authenticate_user(username: str, entered_password: str):
     # Hash the entered password using the stored salt
@@ -111,6 +113,11 @@ def authenticate_user(username: str, entered_password: str):
 
     print("Authentication failed. Invalid password.")
     return False
+
+
+def generate_random_password(password_length: int = 50):
+    letters = string.printable
+    return ''.join(random.choice(letters) for i in range(password_length))
 
 
 # --- Simulating account creation and login ---
