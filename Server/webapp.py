@@ -29,6 +29,8 @@ def create_account():
         # Receive and process the incoming JSON data
         data = request.get_json()
 
+        print("POST!")
+
         if data:
             username = data.get('username')
             hashed_password = data.get('hashedPassword')
@@ -38,10 +40,13 @@ def create_account():
             print(f"Received data: Username: {username}, Hashed Password: {hashed_password}, Salt: {salt}")
 
             # Here you can handle storing the data in your database or any other processing you need
+            # For now, let's simulate a successful storage operation
+            # store_user_data(username, hashed_password, salt)
 
             # Respond back to the client
             return jsonify({'message': 'Account created successfully!'}), 201
         else:
+            print("No data received or data is malformed.")
             return jsonify({'error': 'Invalid data received!'}), 400
 
     return render_template('create_account.html')

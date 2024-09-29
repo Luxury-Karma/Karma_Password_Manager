@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <script src="{{ url_for('static', filename='client_encryption.js') }}"></script> <!-- Ensure this is correct -->
+    <script src="{{ url_for('static', filename='client_encryption.js') }}"></script>
 </head>
 <body>
 
@@ -87,7 +87,7 @@ async function handleFormSubmit(event) {
     };
 
     try {
-        const response = await fetch('/your-server-endpoint', { // Replace with your server endpoint
+        const response = await fetch('/create', { // Update the endpoint
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
