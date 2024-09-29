@@ -103,6 +103,10 @@ async function handleFormSubmit(event) {
         const result = await response.json();
         console.log('Server response:', result);
         alert('Registration successful!');
+        
+        // Redirect to login page after successful registration
+        window.location.href = '/login'; 
+
     } catch (error) {
         console.error('Error sending data to the server:', error);
         alert(error.message); // Display the specific error message from the server

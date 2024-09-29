@@ -23,6 +23,7 @@ def loggin():
     return redirect('/login')
 
 
+#TODO : WE NEED TO CLEAN WHAT THE USER SEND US ! we need to protect against sql injection
 @app.route('/create', methods=['POST', 'GET'])
 def create_account():
     if request.method == 'POST':
@@ -39,7 +40,7 @@ def create_account():
 
             print(f"Received data: Username: {username}, Hashed Password: {hashed_password}, Salt: {salt}")
 
-            server_main.create_user(user_name=username,hash_verification=hashed_password,salt=salt)
+            server_main.create_user(user_name=username, hash_verification=hashed_password, salt=salt)
             print('user created')
 
             return jsonify({'message': 'Account created successfully!'}), 201
@@ -50,21 +51,28 @@ def create_account():
     return render_template('create_account.html')
 
 
+@app.route('/salt_request', methods=['POST'])
+def get_user_salts():
+    if not request.method == 'POST':
+        print("this is not a post request! ")
+        return jsonify({'Error': 'Wrong Request'}), 404
+    username = request.get_json()['username']
+    user_salt = server_main.get_user_salt(username)
+    if user_salt == None:
+        return jsonify({'Error': 'User does not exist'}), 400
+    print(f'user salt {user_salt}')
+    return jsonify({'salt': user_salt}), 200
+
+
 @app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
-        username = request.form['un']
-
-        user_info = get_user_information(username)
-        print(f"user login tentative : {username}")
-        if user_info and user_info['salt']:
-            salt = user_info['salt']
-
-            # Send the salt back to the client
-            return jsonify({'salt': salt.hex()})
-
-        return "User not found", 404
-    return render_template('index.html')
+        username = request.get_json()['username']
+        hash = request.get_json()['hash']
+        if not server_main.verify_user_hash(username,hash):
+            return jsonify({'Error': 'Wrong password'}), 400
+        return redirect('/success')
+    return render_template('login.html')
 
 
 @app.route('/verify', methods=['POST'])

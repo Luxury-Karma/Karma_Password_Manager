@@ -8,6 +8,11 @@ def main():
     DB_Interactions.__create_server_db(db_path='DB/server_user_db.db')
 
 
+def verify_user_hash(username:str, hash:bytes):
+    if hash != get_user_hash(user_name=username):
+        return False
+    return True
+
 
 def is_free_username(testing_username:str)->bool:
     return DB_Interactions.user_verification(db_path='DB/server_user_db.db',user_to_verify=testing_username)

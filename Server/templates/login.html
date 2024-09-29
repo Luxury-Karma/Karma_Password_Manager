@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Encryption</title>
+    <script src="{{ url_for('static', filename='client_encryption.js') }}"></script> <!-- Ensure this is correct -->
+</head>
+<body>
+    <h1>Luxury_Karma Little Password Manager</h1>
+
+    <form id="encryption-form" onsubmit="login(event)">
+
+        <p>Enter Username: </p>
+        <p><input type="text" id="username" required /></p>
+        <p>Enter Master Password: </p>
+        <p><input type="password" id="master-password" required /></p>
+        <p><input type="submit" value="submit" /></p>
+
+    </form>
+
+    <script>
+
+async function hashPassword(password, salt, iterations = 100000, keyLength = 32) {
+    const encoder = new TextEncoder();
+    const passwordBytes = encoder.encode(password);
+    const saltBytes = encoder.encode(salt);
+
+    // Generate the hash using PBKDF2
+    const hashBuffer = await crypto.subtle.importKey(
+        'raw',
+        passwordBytes,
+        { name: 'PBKDF2' },
+        false,
+        ['deriveBits', 'deriveKey']
+    );
+
+    const keyBuffer = await crypto.subtle.deriveBits(
+        {
+            name: 'PBKDF2',
+            salt: saltBytes,
+            iterations: iterations,
+            hash: 'SHA-256',
+        },
+        hashBuffer,
+        keyLength * 8 // Convert to bits
+    );
+
+    // Convert the hash to a hex string
+    return Array.from(new Uint8Array(keyBuffer))
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
+}
+
+
+async function login(event) {
+    event.preventDefault();  // Prevent the form from submitting
+    
+    const username = document.getElementById('username').value;
+    const master_password = document.getElementById('master-password').value;
+
+    try {
+        // Request the salt for the user
+        console.log("asking for salt");
+        const response = await fetch('/salt_request', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'username': username })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'Network response was not ok');
+        }
+
+        console.log("Received salt:", result['salt']);
+
+        // Hash the master password with the received salt
+        const hashedPassword = await hashPassword(master_password, result['salt']);
+        console.log("Hashed password:", hashedPassword);
+
+        // Send hashed password to login endpoint
+        const is_proper_user = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                'username': username,
+                'hash': hashedPassword
+            })
+        });
+
+        // Check if the response is a redirect
+        if (is_proper_user.redirected) {
+            window.location.href = is_proper_user.url;  // Redirect the user to the new URL
+            return;
+        }
+
+        // Parse the login response if it's not a redirect
+        const loginResult = await is_proper_user.json();
+        if (!is_proper_user.ok) {
+            throw new Error(loginResult.error || 'Login failed');
+        }
+
+        console.log("Login successful!");
+
+    } catch (error) {
+        console.error('Error with server communication:', error);
+    }
+}
+
+    </script>
+</body>
+</html>
