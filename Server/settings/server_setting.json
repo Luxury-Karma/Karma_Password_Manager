@@ -1,0 +1,5 @@
+{
+  "db_path": "./DB/",
+  "server_public_ip": "10.0.0.1"
+
+}

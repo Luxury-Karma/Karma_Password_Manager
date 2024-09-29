@@ -1,12 +1,26 @@
 # Karma Little Password Manager 
+    
+    - What is this for : 
+        This is for someone who can host a password manager on his network for him and other people.
+    
+    - Why does this exist : 
+        I personally belive that we should control our own data and stop using big corporation to keep it safe
+    
+    - How does this work : 
+        By creating a password manager webserver (backend python with a SQL db). 
+        The server will generate a webpage (Duh) where user can connect.
+        Once connected the user can see all the website he added to his db and can ask to receive the for any of them
+        The server will not send anything related to the password without the direct demand of the client.
 
-The objective : Make a simple and effecitve password manager back and front end. Accessible saffely from the web as any password manager should. 
 
-How to do it: 
+# Security feature
+    the Application will do all the decryption and encryption on the client side.
+    This way the onlything moving betweenn the server and the client are allready encrypted data. 
+    It might protect against a man in the middle attack.
+    
+    The Server owner does not keep the master password nor any particullar data to be able to easily get the 
+    user password. The server keep a hashmap for the loggin 
 
-2 different plan that I probably will try at once : 
-    1 : Using the classic web browser. Making account connection etc. and transfering data this way to the server
-    2 : Using an app that connect to the server directly and transfer the data with the TCP connection with my own encryption etc. 
 
-an interesting idea could be to keep the web in local and make a connection to a VPN obligatory to access it to upgrade the security. 
-This project might have a built in system for a VPN ( I allready made one but its never bad to practice. )
+# How To Setup
+    TBD
