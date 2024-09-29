@@ -29,21 +29,19 @@ def create_account():
         # Receive and process the incoming JSON data
         data = request.get_json()
 
-        print("POST!")
-
         if data:
             username = data.get('username')
             hashed_password = data.get('hashedPassword')
             salt = data.get('salt')
 
-            # Log the received data (for debugging)
+            if not server_main.is_free_username(username):
+               return jsonify({'error': 'user already exist'}), 400
+
             print(f"Received data: Username: {username}, Hashed Password: {hashed_password}, Salt: {salt}")
 
-            # Here you can handle storing the data in your database or any other processing you need
-            # For now, let's simulate a successful storage operation
-            # store_user_data(username, hashed_password, salt)
+            server_main.create_user(user_name=username,hash_verification=hashed_password,salt=salt)
+            print('user created')
 
-            # Respond back to the client
             return jsonify({'message': 'Account created successfully!'}), 201
         else:
             print("No data received or data is malformed.")

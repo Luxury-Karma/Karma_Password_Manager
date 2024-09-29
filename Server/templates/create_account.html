@@ -87,7 +87,7 @@ async function handleFormSubmit(event) {
     };
 
     try {
-        const response = await fetch('/create', { // Update the endpoint
+        const response = await fetch('/create', { // Updated to point to your server endpoint
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -96,7 +96,8 @@ async function handleFormSubmit(event) {
         });
 
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Network response was not ok');
         }
 
         const result = await response.json();
@@ -104,9 +105,11 @@ async function handleFormSubmit(event) {
         alert('Registration successful!');
     } catch (error) {
         console.error('Error sending data to the server:', error);
-        alert('Error during registration. Please try again.');
+        alert(error.message); // Display the specific error message from the server
     }
 }
+
+
 </script>
 
 </body>
