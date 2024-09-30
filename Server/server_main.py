@@ -30,6 +30,7 @@ def create_user(user_name: str, salt, hash_verification)->bool:
 def add_new_password(user_name: str, website:str, password:str, website_user_name:str):
     DB_Interactions.add_password_to_db(db_path=f'user_data/{user_name}.db', password=password, website=website, creation_date='2024-09-28', website_user_name=website_user_name)
 
+
 def get_password_for_website(user_name: str, website:str):
     return DB_Interactions.fetch_password_for_website(db_path=f'user_data/{user_name}.db', website='netflix')
 
@@ -48,6 +49,10 @@ def get_user_hash(user_name: str):
 def read_settings():
     with open('settings/server_setting.json', 'r') as f:
         return json.loads(f.read())
+
+
+def get_user_websites(username):
+    return DB_Interactions.fetch_all_website(db_path=f'./user_data/{username}.db')
 
 
 if __name__ == '__main__':

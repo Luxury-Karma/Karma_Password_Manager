@@ -1,10 +1,12 @@
-from flask import Flask, redirect, url_for, request, render_template, jsonify
+from flask import Flask, redirect, url_for, request, render_template, jsonify, make_response
 import hashlib
 import os
 import server_main
+import uuid
 
 app = Flask(__name__)
 
+active_sessions = {}
 
 def get_user_information(username: str):
     return {
@@ -38,14 +40,10 @@ def create_account():
             if not server_main.is_free_username(username):
                return jsonify({'error': 'user already exist'}), 400
 
-            print(f"Received data: Username: {username}, Hashed Password: {hashed_password}, Salt: {salt}")
-
             server_main.create_user(user_name=username, hash_verification=hashed_password, salt=salt)
-            print('user created')
 
             return jsonify({'message': 'Account created successfully!'}), 201
         else:
-            print("No data received or data is malformed.")
             return jsonify({'error': 'Invalid data received!'}), 400
 
     return render_template('create_account.html')
@@ -69,9 +67,19 @@ def login():
     if request.method == 'POST':
         username = request.get_json()['username']
         hash = request.get_json()['hash']
-        if not server_main.verify_user_hash(username,hash):
+
+        if not server_main.verify_user_hash(username, hash):
             return jsonify({'Error': 'Wrong password'}), 400
-        return redirect('/success')
+
+        # Once connected, generate the session id and send the cookie
+        session_id = str(uuid.uuid4())
+        active_sessions[session_id] = username
+
+        # Create the cookie
+        response = make_response(jsonify({'message': 'Login successful', 'redirect': f'/home/{username}'}))
+        response.set_cookie('session_id', session_id, httponly=True, secure=True, max_age=900, samesite='None')
+
+        return response
     return render_template('login.html')
 
 
@@ -98,10 +106,31 @@ def verify():
     return jsonify({'message': 'User not found'}), 404
 
 
-@app.route('/success/<name>')
-def success(name):
-    return 'Welcome %s' % name
+# Dynamic route for serving user-specific home page
+@app.route('/home/<username>', methods=['GET'])
+def user_home(username):
+    print("hello personal home page")
 
+    session_id = request.cookies.get('session_id')
+
+    # Ensure the session is valid
+    if session_id not in active_sessions or active_sessions[session_id] != username:
+        return redirect('/login')
+
+    # Render the user's specific home page (or JSON data for AJAX calls)
+    return render_template('user_home.html')
+
+
+# Example route for logging out (removes the session)
+@app.route('/logout', methods=['POST'])
+def logout():
+    session_id = request.cookies.get('session_id')
+    if session_id in active_sessions:
+        del active_sessions[session_id]
+
+    response = make_response(redirect('/login'))
+    response.delete_cookie('session_id')
+    return response
 
 if __name__ == '__main__':
     app.run()

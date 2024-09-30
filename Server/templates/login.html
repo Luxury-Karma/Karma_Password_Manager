@@ -56,6 +56,10 @@ async function hashPassword(password, salt, iterations = 100000, keyLength = 32)
 async function login(event) {
     event.preventDefault();  // Prevent the form from submitting
     
+    if (sessionStorage.getItem('derivedKey')) {
+        sessionStorage.removeItem('derivedKey');
+    }
+
     const username = document.getElementById('username').value;
     const master_password = document.getElementById('master-password').value;
 
@@ -81,8 +85,10 @@ async function login(event) {
         const hashedPassword = await hashPassword(master_password, result['salt']);
         console.log("Hashed password:", hashedPassword);
 
+        sessionStorage.setItem('derivedKey', hashedPassword);  // Store the key
+
         // Send hashed password to login endpoint
-        const is_proper_user = await fetch('/login', {
+        const loginResponse = await fetch('/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -93,24 +99,24 @@ async function login(event) {
             })
         });
 
-        // Check if the response is a redirect
-        if (is_proper_user.redirected) {
-            window.location.href = is_proper_user.url;  // Redirect the user to the new URL
-            return;
-        }
-
-        // Parse the login response if it's not a redirect
-        const loginResult = await is_proper_user.json();
-        if (!is_proper_user.ok) {
+        const loginResult = await loginResponse.json();
+        if (!loginResponse.ok) {
             throw new Error(loginResult.error || 'Login failed');
         }
 
         console.log("Login successful!");
 
+        // Manually handle redirection if the login was successful
+        if (loginResult.redirect) {
+            window.location.href = loginResult.redirect;
+        }
+
     } catch (error) {
         console.error('Error with server communication:', error);
     }
 }
+
+
 
     </script>
 </body>
